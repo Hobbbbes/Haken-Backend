@@ -1,3 +1,19 @@
-/val
-    Send token in form of string
-    Send OK if token exists and Err if not
+/auth
+    Need a token
+    /tasks 
+        get all tasks for this User
+    /task/{id} 
+        
+
+
+
+
+
+## Database
+
+Tabel: Tasks
+    Stores all Tasks
+Tabel: Users
+    Stores User Tokens for now
+Tabel: UserTasks
+    Stores Users and there respectiv tasks as well as if this tasks has been solved and how many Points they got
