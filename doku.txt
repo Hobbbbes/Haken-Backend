@@ -1,0 +1,3 @@
+/val
+    Send token in form of string
+    Send OK if token exists and Err if not
