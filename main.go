@@ -17,8 +17,8 @@ func main() {
 	s := r.PathPrefix("/auth").Subrouter()
 	s.Use(handels.AuthToken)
 
-	s.HandleFunc("/tasks").Methods("GET")
-	s.HandleFunc("/task/{id}").Methods("GET")
+	s.HandleFunc("/tasks", handels.GetTasks).Methods("GET")
+	s.HandleFunc("/task/{id}", handels.GetTask).Methods("GET")
 
 	//End
 	sc := make(chan os.Signal, 1)
