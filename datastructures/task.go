@@ -1,4 +1,4 @@
-package types
+package datastructures
 
 //Task describes all important information
 type Task struct {
@@ -22,8 +22,18 @@ type TasksPerUser struct {
 	Tasks []Task
 }
 
+//Result connects a submission with a subtask
+type Result struct {
+	Submiss    *Submission
+	Subt       *Subtask
+	Points     int
+	ResultCode string
+}
+
+//Submission of a User for a given Task
 type Submission struct {
 	ID     uint64
 	Author *User
+	T      *Task
 	//Source Code path is calculated by ID
 }
