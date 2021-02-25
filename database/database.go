@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -13,13 +12,16 @@ var db *sql.DB
 
 //InitDB opens the database connection
 func InitDB(dbname string, user string, pwd string) error {
-	base, err := sql.Open("mysql", fmt.Sprintf("%s:%s@/%s", user, pwd, dbname))
+	s := fmt.Sprintf("%s:%s@/%s", user, pwd, dbname)
+	base, err := sql.Open("mysql", s)
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 	db = base
 	db.SetConnMaxLifetime(time.Minute * 3)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
+
+	recentlyUsedTokens = make(map[string]bool)
 	return nil
 }

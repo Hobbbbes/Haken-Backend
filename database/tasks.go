@@ -19,7 +19,7 @@ func GetTasksForUser(userToken string) ([]datastructures.Task, error) {
 	}
 	taskIDs := make([]int, 0, 20)
 
-	taskIDsRows, err := db.Query("SELECT Tasks_id FROM Tasks_has_Users WHERE User_id = ?", user.ID)
+	taskIDsRows, err := db.Query("SELECT Tasks_id FROM Tasks_has_Users WHERE Users_id = ?", user.ID)
 
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func GetTasksForUser(userToken string) ([]datastructures.Task, error) {
 		taskIDs = append(taskIDs, taskID)
 	}
 	tasks := make([]datastructures.Task, 0, 20)
-	for id := range taskIDs {
+	for _, id := range taskIDs {
 		task, err := getTask(id)
 		if err != nil {
 			return nil, err
