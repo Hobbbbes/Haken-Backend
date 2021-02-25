@@ -29,6 +29,7 @@ func InitDB(dbname string, user string, pwd string) error {
 	return nil
 }
 
+//CloseDB closes the connection to the database
 func CloseDB() {
 	db.Close()
 }

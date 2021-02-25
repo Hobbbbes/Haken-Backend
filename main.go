@@ -34,7 +34,7 @@ func main() {
 	s.Use(handels.AuthToken)
 	s.HandleFunc("/groups", handels.GetGroups).Methods("GET")
 	s.HandleFunc("/{groupID}/tasks", handels.GetTasks).Methods("GET")
-
+	s.HandleFunc("/tasks/{taskID}/subtasks", handels.GetSubtasks).Methods("GET")
 	fmt.Println("Started serving")
 	err = http.ListenAndServe(":8080", s)
 	if err != nil {
