@@ -1,6 +1,11 @@
 package database
 
-import "github.com/poodlenoodle42/Hacken-Backend/datastructures"
+import (
+	"log"
+	"strings"
+
+	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
+)
 
 func getTask(taskID int) (datastructures.Task, error) {
 	var task datastructures.Task
@@ -15,30 +20,38 @@ func GetTasksForUser(userToken string) ([]datastructures.Task, error) {
 	err := db.QueryRow("SELECT id,Token FROM Users WHERE Token = ?", userToken).Scan(
 		&user.ID, &user.Token)
 	if err != nil {
+		log.Println("GetTasksForUser: " + err.Error())
 		return nil, err
 	}
-	taskIDs := make([]int, 0, 20)
+	taskIDs := make([]interface{}, 0, 20)
 
 	taskIDsRows, err := db.Query("SELECT Tasks_id FROM Tasks_has_Users WHERE Users_id = ?", user.ID)
 
 	if err != nil {
+		log.Println("GetTasksForUser: " + err.Error())
 		return nil, err
 	}
 	for taskIDsRows.Next() {
 		var taskID int
 		err := taskIDsRows.Scan(&taskID)
 		if err != nil {
+			log.Println("GetTasksForUser: " + err.Error())
 			return nil, err
 		}
 		taskIDs = append(taskIDs, taskID)
 	}
 	tasks := make([]datastructures.Task, 0, 20)
-	for _, id := range taskIDs {
-		task, err := getTask(id)
+
+	stmt := "SELECT id,Name,Author,Description FROM Tasks WHERE id in (?" + strings.Repeat(",?", len(taskIDs)-1) + ")"
+	taskRows, err := db.Query(stmt, taskIDs...)
+	for taskRows.Next() {
+		var task datastructures.Task
+		err := taskRows.Scan(&task.ID, &task.Name, &task.Author, &task.Description)
 		if err != nil {
+			log.Println("GetTasksForUser: " + err.Error())
 			return nil, err
 		}
 		tasks = append(tasks, task)
 	}
-	return tasks, err
+	return tasks, nil
 }

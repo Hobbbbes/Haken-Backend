@@ -8,6 +8,12 @@ type Task struct {
 	Description string `json:"description"`
 }
 
+type Group struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 //Subtask holds Information about one run of the programm
 type Subtask struct {
 	ID       uint64

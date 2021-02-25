@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,18 +16,31 @@ import (
 
 func main() {
 	config := config.ReadConfig("config/config.yaml")
+
+	f, err := os.OpenFile("log.txt",
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(f)
+
 	database.InitDB(config.DBName, config.DBUser, config.DBPassword)
+	defer database.CloseDB()
+
 	r := mux.NewRouter().StrictSlash(true)
 	//Use for unautherized route
 
 	s := r.PathPrefix("/auth").Subrouter()
 	s.Use(handels.AuthToken)
+	s.HandleFunc("/groups", handels.GetGroups).Methods("GET")
+	s.HandleFunc("/{groupID}/tasks", handels.GetTasks).Methods("GET")
 
-	s.HandleFunc("/tasks", handels.GetTasks).Methods("GET")
-	s.HandleFunc("/task/{id}", handels.GetTask).Methods("GET")
-
-	http.ListenAndServe(":8080", s)
+	err = http.ListenAndServe(":8080", s)
+	if err != nil {
+		log.Panic(err)
+	}
 	//End
+	fmt.Println("Started serving")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc

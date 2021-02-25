@@ -25,3 +25,7 @@ func InitDB(dbname string, user string, pwd string) error {
 	recentlyUsedTokens = make(map[string]bool)
 	return nil
 }
+
+func CloseDB() {
+	db.Close()
+}

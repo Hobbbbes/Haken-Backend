@@ -1,6 +1,8 @@
 package database
 
 import (
+	"database/sql"
+	"log"
 	"sync"
 	"time"
 )
@@ -27,5 +29,11 @@ func AuthToken(token string) bool {
 	return a
 }
 func authTokenDatabase(token string) bool {
-	return true
+	var exists bool
+	err := db.QueryRow("SELECT exists (SELECT id FROM Users WHERE Token = ?)", token).Scan(&exists)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println(err)
+		return false
+	}
+	return exists
 }
