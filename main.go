@@ -29,14 +29,20 @@ func main() {
 
 	r := mux.NewRouter().StrictSlash(true)
 	//Use for unautherized route
-
+	r.HandleFunc("/register", handels.AddUser).Methods("POST")
 	s := r.PathPrefix("/auth").Subrouter()
 	s.Use(handels.AuthToken)
 	s.HandleFunc("/groups", handels.GetGroups).Methods("GET")
-	s.HandleFunc("/{groupID}/tasks", handels.GetTasks).Methods("GET")
+	s.HandleFunc("/groups/{groupID}/rqtoken", handels.RequestGroupToken).Methods("GET")
+	s.HandleFunc("/groups/{groupID}/tasks", handels.GetTasks).Methods("GET")
+
+	//Token as json
+	s.HandleFunc("/groups/join", handels.JoinGroup).Methods("POST")
+
 	s.HandleFunc("/tasks/{taskID}/subtasks", handels.GetSubtasks).Methods("GET")
+
 	fmt.Println("Started serving")
-	err = http.ListenAndServe(":8080", s)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		log.Panic(err)
 	}

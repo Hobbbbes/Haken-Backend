@@ -20,7 +20,7 @@ func GetSubtasksForTasks(taskID int, token string) ([]datastructures.Subtask, er
 		log.Println("GetSubtasksForTasks: " + err.Error())
 		return nil, err
 	}
-	group, err := getGroup(task.GroupID)
+	group, err := GetGroup(task.GroupID)
 	if err != nil {
 		log.Println("GetSubtasksForTasks: " + err.Error())
 		return nil, err

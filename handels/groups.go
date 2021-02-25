@@ -2,9 +2,13 @@ package handels
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/poodlenoodle42/Hacken-Backend/database"
 )
 
@@ -18,4 +22,71 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(groups)
+}
+
+func RequestGroupToken(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
+	vars := mux.Vars(r)
+	groupIDstring := vars["groupID"]
+	groupID, err := strconv.Atoi(groupIDstring)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	ex, err := database.DoesGroupExists(groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !ex {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Group does not exist"))
+		return
+	}
+	isAdmin, err := database.IsUserAdminOfGroup(token, groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !isAdmin {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("User is not admin of group"))
+		return
+	}
+	gToken := database.GenerateGroupToken(groupID)
+	w.Write([]byte(fmt.Sprintf(`{"groupToken":"%s"}`, gToken)))
+
+}
+
+func JoinGroup(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	var v interface{}
+	err = json.Unmarshal(reqBody, &v)
+	data := v.(map[string]interface{})
+	gToken := fmt.Sprintf("%v", data["groupToken"])
+	groupID := database.GetGroupIDFromToken(gToken)
+	if groupID == -1 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Token does not exist"))
+		return
+	}
+	err = database.AddUserToGroup(token, groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	group, err := database.GetGroup(groupID)
+	json.NewEncoder(w).Encode(group)
 }

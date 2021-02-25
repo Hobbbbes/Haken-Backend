@@ -18,3 +18,4 @@ config/config.yaml
 setup.txt
 .vscode
 log.txt
+__debug_bin
