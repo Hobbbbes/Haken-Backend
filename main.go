@@ -35,12 +35,13 @@ func main() {
 	s.HandleFunc("/groups", handels.GetGroups).Methods("GET")
 	s.HandleFunc("/{groupID}/tasks", handels.GetTasks).Methods("GET")
 
+	fmt.Println("Started serving")
 	err = http.ListenAndServe(":8080", s)
 	if err != nil {
 		log.Panic(err)
 	}
 	//End
-	fmt.Println("Started serving")
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc

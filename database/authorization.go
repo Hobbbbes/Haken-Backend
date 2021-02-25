@@ -30,7 +30,7 @@ func AuthToken(token string) bool {
 }
 func authTokenDatabase(token string) bool {
 	var exists bool
-	err := db.QueryRow("SELECT exists (SELECT id FROM Users WHERE Token = ?)", token).Scan(&exists)
+	err := db.QueryRow("SELECT exists (SELECT * FROM User WHERE Token = ?)", token).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println(err)
 		return false

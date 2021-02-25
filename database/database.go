@@ -21,7 +21,10 @@ func InitDB(dbname string, user string, pwd string) error {
 	db.SetConnMaxLifetime(time.Minute * 3)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
-
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
 	recentlyUsedTokens = make(map[string]bool)
 	return nil
 }
