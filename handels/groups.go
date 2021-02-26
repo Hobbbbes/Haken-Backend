@@ -21,6 +21,7 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	w.Header().Set("Content-Type", "text/json")
 	json.NewEncoder(w).Encode(groups)
 }
 
@@ -58,6 +59,7 @@ func RequestGroupToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	gToken := database.GenerateGroupToken(groupID)
+	w.Header().Set("Content-Type", "text/json")
 	w.Write([]byte(fmt.Sprintf(`{"groupToken":"%s"}`, gToken)))
 
 }
@@ -83,10 +85,22 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	err = database.AddUserToGroup(token, groupID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		if err.Error() == "Group does not exists" || err.Error() == "User already in group" {
+			w.WriteHeader(http.StatusConflict)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		w.Write([]byte(err.Error()))
 		return
 	}
 	group, err := database.GetGroup(groupID)
+	if err != nil {
+
+		w.WriteHeader(http.StatusInternalServerError)
+
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "text/json")
 	json.NewEncoder(w).Encode(group)
 }

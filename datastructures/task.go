@@ -13,6 +13,7 @@ type Group struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	IsAdmin     bool   `json:"isadmin"`
 }
 
 //Subtask holds Information about one run of the programm

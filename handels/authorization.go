@@ -7,7 +7,7 @@ import (
 	"github.com/poodlenoodle42/Hacken-Backend/database"
 )
 
-//Used when Password and Username are implemented
+var DataDir string
 
 //AuthToken Authenticates a token
 func AuthToken(next http.Handler) http.Handler {

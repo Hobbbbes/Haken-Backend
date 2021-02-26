@@ -1,19 +1,116 @@
+/register POST
+    Registers a user with this token 
+    Accepts: json
+        type User struct {
+            Token string `json:"token"`
+        }
+    Returns Plain-Text / nothing:
+        http.StatusInternalServerError
+            Error message
+        http.StatusConflict
+            "User already exists"
+        http.StatusOK
+            nothing
+
 /auth
-    Need a token
-    /tasks 
-        get all tasks for this User
-    /task/{id} 
-        
-
-
-
-
-
-## Database
-
-Tabel: Tasks
-    Stores all Tasks
-Tabel: Users
-    Stores User Tokens for now
-Tabel: UserTasks
-    Stores Users and there respectiv tasks as well as if this tasks has been solved and how many Points they got
+    Checks user token, if token does not exists answer with http.StatusForbidden
+    /groups GET
+        Returns all groups a user has access to
+        Accepts: nothing
+        Returns Plain-Text / json:
+            http.StatusInternalServerError
+                Error message
+            http.StatusOK
+                [
+                    type Group struct {
+                        ID          int    `json:"id"`
+                        Name        string `json:"name"`
+                        Description string `json:"description"`
+                        IsAdmin     bool   `json:"isadmin"`
+                    }                   
+                ]
+    /groups/{groupID}/rqtoken GET
+        Returns Token (gets invalid after 2h) for other Users to join group, only request when user is admin of group
+        Accepts: nothing
+        Returns Plain-Text / json:
+            http.StatusBadRequest (Cant parse groupID or Group does not exit)
+                Error message
+            http.StatusInternalServerError
+                Error message
+            http.StatusForbidden
+                "User is not admin of group"
+            http.StatusOK
+                {
+                    "groupToken":"..."
+                }
+    /groups/{groupID}/tasks GET
+        Returns tasks in group if user is member of group
+        Accepts: nothing
+        Returns Plain-Text / json:
+            http.StatusBadRequest (Cant parse groupID or Group does not exit)
+                Error message
+            http.StatusInternalServerError
+                Error message
+            http.StatusForbidden
+                "User not allowed to view Group details"
+            http.StatusOK
+                [
+                    type Task struct {
+                        ID          int    `json:"id"`
+                        Name        string `json:"name"`
+                        Author      string `json:"author"`
+                        Description string `json:"description"`
+                        GroupID     int    `json:"-"` ////Not included in json
+                    }
+                ]
+    /groups/join POST
+        Join Group with Token, get group details back if join was success
+        Accepts: json
+            {
+                "groupToken":"..."
+            }
+        Returns Plain-Text / json:
+            http.StatusBadRequest (Token does not exist)
+                Error message
+            http.StatusInternalServerError
+                Error message
+            http.StatusConflict
+                "User already in group"
+            http.StatusOK
+                type Group struct {
+                    ID          int    `json:"id"`
+                    Name        string `json:"name"`
+                    Description string `json:"description"`
+                    IsAdmin     bool   `json:"isadmin"`
+                }
+    /tasks/{taskID}/subtasks GET
+    Returns all subtasks for a task
+    Accepts: nothing
+    Returns: Plain-Text / json:
+        http.StatusBadRequest (Cant parse taskID)
+            Error message
+        http.StatusInternalServerError
+            Error message
+        http.StatusForbidden
+            "User not allowed to view Group details"
+        http.StatusOK
+            [
+                type Subtask struct {
+                    ID     int    `json:"id"`
+                    Points int    `json:"points"`
+                    Name   string `json:"name"`
+                    TaskID int    `json:"-"` //Not included in json
+                }
+            ]
+    /tasks/{taskID} GET
+        Returns pdf description associated with task
+        Accepts: nothing
+        Returns: Plain-Text / pdf
+            http.StatusBadRequest (Cant parse taskID)
+                Error message
+            http.StatusInternalServerError
+                Error message
+            http.StatusForbidden
+                "User is not allowed to view task"
+            http.StatusOK
+                pdf file

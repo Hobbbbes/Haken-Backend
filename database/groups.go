@@ -73,12 +73,12 @@ func GetTasksForGroup(userToken string, groupID int) ([]datastructures.Task, err
 	return tasks, nil
 }
 
-//GetGroupsForUser returns all Groups a user has access to
+//GetGroupsForUser returns all Groups a user has access to and if he is admin of the group or not
 func GetGroupsForUser(token string) ([]datastructures.Group, error) {
 
 	groupIDs := make([]interface{}, 0, 20)
-
-	groupIDsRows, err := db.Query("SELECT Group_id FROM Group_has_Users WHERE User_Token = ?", token)
+	groupsIsAdmin := make(map[int]bool)
+	groupIDsRows, err := db.Query("SELECT Group_id,IsAdmin FROM Group_has_Users WHERE User_Token = ?", token)
 
 	if err != nil {
 		log.Println("GetGroupsForUser: " + err.Error())
@@ -88,12 +88,18 @@ func GetGroupsForUser(token string) ([]datastructures.Group, error) {
 
 	for groupIDsRows.Next() {
 		var groupID int
-		err := groupIDsRows.Scan(&groupID)
+		var isAdmin int
+		err := groupIDsRows.Scan(&groupID, &isAdmin)
 		if err != nil {
 			log.Println("GetGroupsForUser: " + err.Error())
 			return nil, err
 		}
 		groupIDs = append(groupIDs, groupID)
+		if isAdmin == 1 {
+			groupsIsAdmin[groupID] = true
+		} else {
+			groupsIsAdmin[groupID] = false
+		}
 	}
 	groups := make([]datastructures.Group, 0, 20)
 	if len(groupIDs) == 0 {
@@ -112,6 +118,7 @@ func GetGroupsForUser(token string) ([]datastructures.Group, error) {
 			log.Println("GetGroupsForUser: " + err.Error())
 			return nil, err
 		}
+		group.IsAdmin = groupsIsAdmin[group.ID]
 		groups = append(groups, group)
 	}
 	return groups, nil

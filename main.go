@@ -16,7 +16,7 @@ import (
 
 func main() {
 	config := config.ReadConfig("config/config.yaml")
-
+	handels.DataDir = config.DataDir
 	f, err := os.OpenFile("log.txt",
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -40,6 +40,7 @@ func main() {
 	s.HandleFunc("/groups/join", handels.JoinGroup).Methods("POST")
 
 	s.HandleFunc("/tasks/{taskID}/subtasks", handels.GetSubtasks).Methods("GET")
+	s.HandleFunc("/tasks/{taskID}", handels.GetTask).Methods("GET")
 
 	fmt.Println("Started serving")
 	err = http.ListenAndServe(":8080", r)

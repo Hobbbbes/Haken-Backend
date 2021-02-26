@@ -19,3 +19,4 @@ setup.txt
 .vscode
 log.txt
 __debug_bin
+data/

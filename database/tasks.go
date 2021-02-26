@@ -14,20 +14,30 @@ func getTask(taskID int) (datastructures.Task, error) {
 	return task, err
 }
 
+//IsUserAllowedToAccessTask checks if a user is allowed to access a given task
+func IsUserAllowedToAccessTask(token string, taskID int) (bool, error) {
+	task, err := getTask(taskID)
+	if err != nil {
+		log.Println("IsUserAllowedToAccessTask: " + err.Error())
+		return false, err
+	}
+	i, err := isUserInGroup(token, task.GroupID)
+	if err != nil {
+		log.Println("IsUserAllowedToAccessTask: " + err.Error())
+		return false, err
+	}
+	return i, nil
+}
+
+//GetSubtasksForTasks checks if user is allowed to view task and if so returns all subtasks for a task
 func GetSubtasksForTasks(taskID int, token string) ([]datastructures.Subtask, error) {
 	task, err := getTask(taskID)
 	if err != nil {
 		log.Println("GetSubtasksForTasks: " + err.Error())
 		return nil, err
 	}
-	group, err := GetGroup(task.GroupID)
+	isUserAllowedToAccess, err := IsUserAllowedToAccessTask(token, task.GroupID)
 	if err != nil {
-		log.Println("GetSubtasksForTasks: " + err.Error())
-		return nil, err
-	}
-	isUserAllowedToAccess, err := isUserInGroup(token, group.ID)
-	if err != nil {
-		log.Println("GetSubtasksForTasks: " + err.Error())
 		return nil, err
 	}
 	if !isUserAllowedToAccess {

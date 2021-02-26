@@ -12,6 +12,7 @@ type Config struct {
 	DBPassword string `yaml:"dbpassword"`
 	DBUser     string `yaml:"dbuser"`
 	Port       string `yaml:"port"`
+	DataDir    string `yaml:"dataDir"`
 }
 
 //ReadConfig reads fills a config struct with information from the given file
