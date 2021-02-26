@@ -12,6 +12,7 @@ import (
 	"github.com/poodlenoodle42/Hacken-Backend/config"
 	"github.com/poodlenoodle42/Hacken-Backend/database"
 	"github.com/poodlenoodle42/Hacken-Backend/handels"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -42,11 +43,20 @@ func main() {
 	s.HandleFunc("/groups/join", handels.JoinGroup).Methods("POST")
 
 	//s.HandleFunc("/tasks/{taskID}/subtasks", handels.GetSubtasks).Methods("GET")
-	s.HandleFunc("/tasks/{taskID}/pdf", handels.GetTaskPDF).Methods("GET")
+	r.HandleFunc("/auth/tasks/{taskID}/pdf", handels.GetTaskPDF).Methods("GET")
 	s.HandleFunc("/tasks/{taskID}", handels.GetSubtasks).Methods("GET")
 	s.HandleFunc("/tasks", handels.GetAllTasksForUser).Methods("GET")
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"token"},
+		// Enable Debugging for testing, consider disabling in production
+		Debug: true,
+	})
+	handler := c.Handler(r)
 	fmt.Println("Started serving")
-	err = http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":8080", handler)
 	if err != nil {
 		log.Panic(err)
 	}

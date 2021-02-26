@@ -77,8 +77,14 @@ func GetSubtasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTaskPDF(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("token")
-	token = strings.TrimSpace(token)
+	//	token := r.Header.Get("token")
+	//	token = strings.TrimSpace(token)
+	token := r.URL.Query().Get("token")
+	if token == "" || !database.AuthToken(token) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	vars := mux.Vars(r)
 	taskIDstring := vars["taskID"]
 	taskID, err := strconv.Atoi(taskIDstring)
@@ -98,7 +104,15 @@ func GetTaskPDF(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User is not allowed to view task"))
 		return
 	}
-	http.ServeFile(w, r, DataDir+fmt.Sprintf("/tasks/%d.pdf", taskID))
+	path := DataDir + fmt.Sprintf("/tasks/%d.pdf", taskID)
+	if _, err := os.Stat(path); err == nil || os.IsExist(err) {
+		http.ServeFile(w, r, path)
+		return
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("File does not exit"))
+	}
+
 }
 
 func NewTask(w http.ResponseWriter, r *http.Request) {
@@ -194,6 +208,13 @@ func GetAllTasksForUser(w http.ResponseWriter, r *http.Request) {
 					group,
 					append(groupsWithTasks[i].Tasks, task),
 				}
+			}
+			groupsWithTasks[i] = datastructures.GroupWithTasks{
+				group,
+				groupsWithTasks[i].Tasks,
+			}
+			if len(groupsWithTasks[i].Tasks) == 0 {
+				groupsWithTasks[i].Tasks = make([]datastructures.Task, 0)
 			}
 		}
 	}
