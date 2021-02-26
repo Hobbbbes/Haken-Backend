@@ -16,6 +16,11 @@ type Group struct {
 	IsAdmin     bool   `json:"isadmin"`
 }
 
+type GroupWithTasks struct {
+	Group
+	Tasks []Task `json:"tasks"`
+}
+
 //Subtask holds Information about one run of the programm
 type Subtask struct {
 	ID     int    `json:"id"`

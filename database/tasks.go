@@ -30,8 +30,8 @@ func IsUserAllowedToAccessTask(token string, taskID int) (bool, error) {
 	return i, nil
 }
 
-//GetSubtasksForTasks checks if user is allowed to view task and if so returns all subtasks for a task
-func GetSubtasksForTasks(taskID int, token string) ([]datastructures.Subtask, error) {
+//GetSubtasksForTask checks if user is allowed to view task and if so returns all subtasks for a task
+func GetSubtasksForTask(taskID int, token string) ([]datastructures.Subtask, error) {
 	task, err := getTask(taskID)
 	if err != nil {
 		log.Println("GetSubtasksForTasks: " + err.Error())

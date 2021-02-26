@@ -152,3 +152,26 @@ func GenerateGroupToken(groupID int) string {
 	})
 	return randomStr
 }
+
+//AddNewGroup adds new Group to database and sets adding user as admin, returns updated group
+func AddNewGroup(token string, group datastructures.Group) (datastructures.Group, error) {
+	res, err := db.Exec("INSERT INTO `Group` (Name,Description) VALUES (?,?)", group.Name, group.Description)
+	if err != nil {
+		log.Println("AddNewGroup: " + err.Error())
+		return group, err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		log.Println("AddNewGroup: " + err.Error())
+		return group, err
+	}
+	group.ID = int(id)
+	group.IsAdmin = true
+	_, err = db.Exec("INSERT INTO Group_has_Users(Group_id,User_Token,IsAdmin) VALUES (?,?,?)",
+		group.ID, token, 1)
+	if err != nil {
+		log.Println("AddNewGroup: " + err.Error())
+		return group, err
+	}
+	return group, nil
+}

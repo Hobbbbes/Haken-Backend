@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/poodlenoodle42/Hacken-Backend/database"
+	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
 )
 
 func GetGroups(w http.ResponseWriter, r *http.Request) {
@@ -101,10 +102,46 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	tasks, err := database.GetTasksForGroup(token, group.ID)
+	if err != nil {
+		if err.Error() == "User not allowed to view Group details" {
+			w.WriteHeader(http.StatusForbidden)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		w.Write([]byte(err.Error()))
+		return
+	}
+	res := datastructures.GroupWithTasks{
+		group,
+		tasks,
+	}
 	w.Header().Set("Content-Type", "text/json")
-	json.NewEncoder(w).Encode(group)
+	json.NewEncoder(w).Encode(res)
 }
 
 func NewGroup(w http.ResponseWriter, r *http.Request) {
-
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	var group datastructures.Group
+	err = json.Unmarshal(reqBody, &group)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	group, err = database.AddNewGroup(token, group)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "text/json")
+	json.NewEncoder(w).Encode(group)
 }

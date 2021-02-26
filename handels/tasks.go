@@ -62,7 +62,7 @@ func GetSubtasks(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	subtasks, err := database.GetSubtasksForTasks(taskID, token)
+	subtasks, err := database.GetSubtasksForTask(taskID, token)
 	if err != nil {
 		if err.Error() == "User not allowed to view Group details" {
 			w.WriteHeader(http.StatusForbidden)
@@ -76,7 +76,7 @@ func GetSubtasks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(subtasks)
 }
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
+func GetTaskPDF(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("token")
 	token = strings.TrimSpace(token)
 	vars := mux.Vars(r)
@@ -186,10 +186,17 @@ func GetAllTasksForUser(w http.ResponseWriter, r *http.Request) {
 	}
 	tasks, err := database.GetTasksForGroups(groupIDs)
 	w.Header().Set("Content-Type", "text/json")
-	res := struct {
-		Tasks  []datastructures.Task  `json:"tasks"`
-		Groups []datastructures.Group `json:"groups"`
-	}{tasks, groups}
-	json.NewEncoder(w).Encode(res)
+	groupsWithTasks := make([]datastructures.GroupWithTasks, len(groups))
+	for i, group := range groups {
+		for _, task := range tasks {
+			if task.GroupID == group.ID {
+				groupsWithTasks[i] = datastructures.GroupWithTasks{
+					group,
+					append(groupsWithTasks[i].Tasks, task),
+				}
+			}
+		}
+	}
+	json.NewEncoder(w).Encode(groupsWithTasks)
 
 }
