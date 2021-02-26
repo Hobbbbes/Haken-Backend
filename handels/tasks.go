@@ -166,5 +166,30 @@ func NewTask(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 	io.Copy(f, file)
+	w.Header().Set("Content-Type", "text/json")
 	json.NewEncoder(w).Encode(task)
+}
+
+func GetAllTasksForUser(w http.ResponseWriter, r *http.Request) {
+
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
+	groups, err := database.GetGroupsForUser(token)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	groupIDs := make([]interface{}, len(groups))
+	for index, v := range groups {
+		groupIDs[index] = v.ID
+	}
+	tasks, err := database.GetTasksForGroups(groupIDs)
+	w.Header().Set("Content-Type", "text/json")
+	res := struct {
+		Tasks  []datastructures.Task  `json:"tasks"`
+		Groups []datastructures.Group `json:"groups"`
+	}{tasks, groups}
+	json.NewEncoder(w).Encode(res)
+
 }

@@ -43,7 +43,7 @@ func main() {
 
 	s.HandleFunc("/tasks/{taskID}/subtasks", handels.GetSubtasks).Methods("GET")
 	s.HandleFunc("/tasks/{taskID}", handels.GetTask).Methods("GET")
-
+	s.HandleFunc("/tasks", handels.GetAllTasksForUser).Methods("GET")
 	fmt.Println("Started serving")
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {

@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
 )
@@ -80,4 +81,26 @@ func AddTask(task datastructures.Task) (datastructures.Task, error) {
 	}
 	return task, nil
 
+}
+
+func GetTasksForGroups(groupIDs []interface{}) ([]datastructures.Task, error) {
+	if len(groupIDs) == 0 {
+		return nil, nil
+	}
+	taskRows, err := db.Query("SELECT id,Name,Author,Description,Group_id FROM `Tasks` WHERE Group_id in (?"+strings.Repeat(",?", len(groupIDs)-1)+")", groupIDs...)
+	if err != nil {
+		log.Println("GetTasksForGroups: ", err.Error())
+		return nil, err
+	}
+	tasks := make([]datastructures.Task, 0, 20)
+	for taskRows.Next() {
+		var t datastructures.Task
+		err := taskRows.Scan(&t.ID, &t.Name, &t.Author, &t.Description, &t.GroupID)
+		if err != nil {
+			log.Println("GetTasksForGroups: ", err.Error())
+			return nil, err
+		}
+		tasks = append(tasks, t)
+	}
+	return tasks, nil
 }

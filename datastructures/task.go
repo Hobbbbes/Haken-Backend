@@ -6,7 +6,7 @@ type Task struct {
 	Name        string `json:"name"`
 	Author      string `json:"author"`
 	Description string `json:"description"`
-	GroupID     int    `json:"-"`
+	GroupID     int    `json:"groupID"`
 }
 
 type Group struct {
