@@ -114,3 +114,5 @@
                 "User is not allowed to view task"
             http.StatusOK
                 pdf file
+    /groups/{groupID}/newTask POST
+    /groups/new POST

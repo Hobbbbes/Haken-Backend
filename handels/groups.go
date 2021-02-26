@@ -104,3 +104,7 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/json")
 	json.NewEncoder(w).Encode(group)
 }
+
+func NewGroup(w http.ResponseWriter, r *http.Request) {
+
+}

@@ -35,6 +35,8 @@ func main() {
 	s.HandleFunc("/groups", handels.GetGroups).Methods("GET")
 	s.HandleFunc("/groups/{groupID}/rqtoken", handels.RequestGroupToken).Methods("GET")
 	s.HandleFunc("/groups/{groupID}/tasks", handels.GetTasks).Methods("GET")
+	s.HandleFunc("/groups/{groupID}/newTask", handels.NewTask).Methods("POST")
+	s.HandleFunc("/groups/new", handels.NewGroup).Methods("POST")
 
 	//Token as json
 	s.HandleFunc("/groups/join", handels.JoinGroup).Methods("POST")

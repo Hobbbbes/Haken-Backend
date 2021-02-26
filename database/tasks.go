@@ -63,3 +63,21 @@ func GetSubtasksForTasks(taskID int, token string) ([]datastructures.Subtask, er
 	}
 	return subtasks, nil
 }
+
+//AddTask adds a task to a group and returns the fully populated task and an error
+func AddTask(task datastructures.Task) (datastructures.Task, error) {
+	res, err := db.Exec("INSERT INTO Tasks(Name,Author,Description,Group_id) VALUES (?,?,?,?)",
+		task.Name, task.Author, task.Description, task.GroupID)
+	if err != nil {
+		log.Printf("AddTask:" + err.Error())
+		return task, err
+	}
+	id, err := res.LastInsertId()
+	task.ID = int(id)
+	if err != nil {
+		log.Printf("AddTask:" + err.Error())
+		return task, err
+	}
+	return task, nil
+
+}
