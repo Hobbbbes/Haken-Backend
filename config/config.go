@@ -8,11 +8,13 @@ import (
 
 //Config contains important information for the running of the Programm
 type Config struct {
-	DBName     string `yaml:"dbname"`
-	DBPassword string `yaml:"dbpassword"`
-	DBUser     string `yaml:"dbuser"`
-	Port       string `yaml:"port"`
-	DataDir    string `yaml:"dataDir"`
+	DBName         string `yaml:"dbname"`
+	DBPassword     string `yaml:"dbpassword"`
+	DBUser         string `yaml:"dbuser"`
+	Port           string `yaml:"port"`
+	DataDir        string `yaml:"dataDir"`
+	CertificateDir string `yaml:"cert"`
+	PrivateKeyDir  string `yaml:"key"`
 }
 
 //ReadConfig reads fills a config struct with information from the given file

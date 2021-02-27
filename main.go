@@ -56,7 +56,7 @@ func main() {
 	})
 	handler := c.Handler(r)
 	fmt.Println("Started serving")
-	err = http.ListenAndServe(":8080", handler)
+	err = http.ListenAndServeTLS(":8080", config.CertificateDir, config.PrivateKeyDir, handler)
 	if err != nil {
 		log.Panic(err)
 	}
