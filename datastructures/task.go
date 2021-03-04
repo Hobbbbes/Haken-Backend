@@ -37,11 +37,3 @@ type Result struct {
 	Points     int
 	ResultCode string
 }
-
-//Submission of a User for a given Task
-type Submission struct {
-	ID     uint64
-	Author *User
-	T      *Task
-	//Source Code path is calculated by ID
-}

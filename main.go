@@ -50,7 +50,7 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
-		AllowedHeaders:   []string{"token"},
+		AllowedHeaders:   []string{"Content-Type", "token"},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: true,
 	})
