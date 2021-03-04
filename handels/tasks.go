@@ -221,3 +221,96 @@ func GetAllTasksForUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(groupsWithTasks)
 
 }
+func NewSubtask(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
+
+	vars := mux.Vars(r)
+	taskIDstring := vars["taskID"]
+	taskID, err := strconv.Atoi(taskIDstring)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	all, err := database.IsUserAllowedToAccessTask(token, taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !all {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("User not allowed to access task"))
+		return
+	}
+	isAuthor, err := database.IsUserAuthorOfTask(token, taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !isAuthor {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("User not author of task"))
+		return
+	}
+	subtaskInfoJSON := r.FormValue("info")
+	if subtaskInfoJSON == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("No task info"))
+		return
+	}
+	var subtaskInfo datastructures.Subtask
+	err = json.Unmarshal([]byte(subtaskInfoJSON), &subtaskInfo)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	infile, _, err := r.FormFile("in")
+	defer infile.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	outfile, _, err := r.FormFile("out")
+	defer outfile.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	subtaskInfo.TaskID = taskID
+	sub, err := database.AddSubtask(subtaskInfo)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	outf, err := os.OpenFile(DataDir+fmt.Sprintf("/subtasks/%d_out", sub.ID), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	defer outf.Close()
+	io.Copy(outf, outfile)
+	inf, err := os.OpenFile(DataDir+fmt.Sprintf("/subtasks/%d_in", sub.ID), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	defer outf.Close()
+	io.Copy(inf, infile)
+	w.WriteHeader(http.StatusOK)
+}

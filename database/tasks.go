@@ -104,3 +104,28 @@ func GetTasksForGroups(groupIDs []interface{}) ([]datastructures.Task, error) {
 	}
 	return tasks, nil
 }
+
+//AddSubtask adds subtask to database and returns subtask with id
+func AddSubtask(t datastructures.Subtask) (datastructures.Subtask, error) {
+	res, err := db.Exec("INSERT INTO Subtasks(Points,Name,Tasks_id) VALUES (?,?,?)",
+		t.Points, t.Name, t.TaskID)
+	if err != nil {
+		log.Printf("AddSubtask:" + err.Error())
+		return t, err
+	}
+	id, err := res.LastInsertId()
+	t.ID = int(id)
+	if err != nil {
+		log.Printf("AddSubtask:" + err.Error())
+		return t, err
+	}
+	return t, nil
+}
+
+func IsUserAuthorOfTask(token string, taskID int) (bool, error) {
+	t, err := getTask(taskID)
+	if err != nil {
+		return false, err
+	}
+	return t.Author == token, nil
+}
