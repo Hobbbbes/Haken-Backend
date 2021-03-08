@@ -12,9 +12,13 @@ import (
 var connection lxd.InstanceServer
 var conf config.ContainerConfig
 
+//InstanceChan channel where instances can be recived and returned
+var InstanceChan chan string
+
 //InitInstances does initialization of module and starts instances
 func InitInstances(co config.ContainerConfig) {
 	conf = co
+	InstanceChan = make(chan string)
 	c, err := lxd.ConnectLXDUnix("", nil)
 	if err != nil {
 		log.Panic(err)
@@ -26,6 +30,7 @@ func InitInstances(co config.ContainerConfig) {
 		if err != nil {
 			log.Panic(err)
 		}
+		InstanceChan <- fmt.Sprintf("Haken%d", i)
 	}
 }
 

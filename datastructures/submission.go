@@ -7,11 +7,13 @@ type Language struct {
 	LaunchTask    string `json:"-" yaml:"launchTask"`
 }
 
+type LanguageName string
+
 //Submission of a User for a given Task
 type Submission struct {
-	ID     uint64
-	Author *User
-	T      *Task
-	Lang   Language
+	ID     uint64       `json:"id"`
+	Author *User        `json:"author"`
+	T      *Task        `json:"task"`
+	Lang   LanguageName `json:"language"`
 	//Source Code path is calculated by ID
 }
