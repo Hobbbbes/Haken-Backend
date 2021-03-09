@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -109,6 +110,7 @@ func GetTaskPDF(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path)
 		return
 	} else {
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("File does not exit"))
 	}
@@ -140,19 +142,10 @@ func NewTask(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	taskInfoJSON := r.FormValue("task")
-	if taskInfoJSON == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("No task info"))
-		return
-	}
 	var taskInfo datastructures.Task
-	err = json.Unmarshal([]byte(taskInfoJSON), &taskInfo)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
-	}
+	taskInfo.Description = r.FormValue("description")
+	taskInfo.Name = r.FormValue("name")
+
 	admin, err := database.IsUserAdminOfGroup(token, groupID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	lxd "github.com/lxc/lxd/client"
 	"github.com/lxc/lxd/shared/api"
@@ -74,7 +75,8 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 		Stdout: write,
 		Stderr: write,
 	}
-	scanner := bufio.NewScanner(read)
+	reader := bufio.NewReader(read)
+	buf := make([]byte, 0, 1024*10)
 	op, err := connection.ExecContainer("h2", req, &args2)
 	if err != nil {
 		return s, err
@@ -85,13 +87,60 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 		return s, err
 	}
 	s.ExitCode = op.Get().Metadata["return"].(int)
-	if s.ExitCode == 0 {
+	if s.ExitCode == 0 { //Compiled, no error message
 		return s, nil
 	}
-	s.Output = ""
-	for scanner.Scan() {
-		s.Output += scanner.Text()
-		s.Output += "\n"
+	n, err := reader.Read(buf[:cap(buf)])
+	if err != nil {
+		if err == io.EOF {
+			return s, nil
+		}
+		return s, err
+	}
+	s.Output = string(buf[:n])
+	return s, nil
+}
+
+var timeout = 10
+
+//Exec executes given task, kills it after time and redirects input, returns output
+func Exec(instance string, command string, in io.ReadCloser) (Status, error) {
+	s := Status{
+		ExitCode: -1,
+		Output:   "",
+	}
+	req := api.ContainerExecPost{
+		Command:     []string{"/usr/bin/timeout", strconv.Itoa(timeout), command},
+		WaitForWS:   true,
+		Interactive: false,
+		User:        1500,
+		Group:       1500,
+		Cwd:         "/home/runner/",
+	}
+	read, write := io.Pipe()
+	args := lxd.ContainerExecArgs{
+		Stdin:  in,
+		Stdout: write,
+		Stderr: write,
+	}
+
+	scanner := bufio.NewReader(read)
+	buf := make([]byte, 0, 10*1024)
+	op, err := connection.ExecContainer(instance, req, &args)
+	if err != nil {
+		return s, err
+	}
+	err = op.Wait()
+	if err != nil {
+		return s, err
+	}
+	s.ExitCode = int(op.Get().Metadata["return"].(float64))
+	if s.ExitCode == 0 {
+		n, err := scanner.Read(buf[:cap(buf)])
+		if err != nil {
+			return s, err
+		}
+		s.Output = string(buf[:n])
 	}
 	return s, nil
 }

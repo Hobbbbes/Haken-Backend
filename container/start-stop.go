@@ -12,13 +12,13 @@ import (
 var connection lxd.InstanceServer
 var conf config.ContainerConfig
 
-//InstanceChan channel where instances can be recived and returned
-var InstanceChan chan string
+//instanceChan channel where instances can be recived and returned
+var instanceChan chan string
 
 //InitInstances does initialization of module and starts instances
 func InitInstances(co config.ContainerConfig) {
 	conf = co
-	InstanceChan = make(chan string)
+	instanceChan = make(chan string)
 	c, err := lxd.ConnectLXDUnix("", nil)
 	if err != nil {
 		log.Panic(err)
@@ -30,7 +30,7 @@ func InitInstances(co config.ContainerConfig) {
 		if err != nil {
 			log.Panic(err)
 		}
-		InstanceChan <- fmt.Sprintf("Haken%d", i)
+		instanceChan <- fmt.Sprintf("Haken%d", i)
 	}
 }
 
@@ -118,4 +118,14 @@ func stopAndDeleteInstance(name string) error {
 		return err
 	}
 	return nil
+}
+
+//GetInstance Get a instance to operate on from the available
+func GetInstance() string {
+	return <-instanceChan
+}
+
+//ReturnInstance returns a instance to the pool of instances
+func ReturnInstance(i string) {
+	instanceChan <- i
 }
