@@ -1,14 +1,14 @@
 package database
 
 import (
-	"errors"
 	"log"
 	"strings"
 
 	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
 )
 
-func getTask(taskID int) (datastructures.Task, error) {
+//GetTask returns task by id and error
+func GetTask(taskID int) (datastructures.Task, error) {
 	var task datastructures.Task
 	err := db.QueryRow("SELECT id,Name,Author,Description,Group_id FROM Tasks WHERE id = ?", taskID).Scan(
 		&task.ID, &task.Name, &task.Author, &task.Description, &task.GroupID)
@@ -17,7 +17,7 @@ func getTask(taskID int) (datastructures.Task, error) {
 
 //IsUserAllowedToAccessTask checks if a user is allowed to access a given task
 func IsUserAllowedToAccessTask(token string, taskID int) (bool, error) {
-	task, err := getTask(taskID)
+	task, err := GetTask(taskID)
 	if err != nil {
 		log.Println("IsUserAllowedToAccessTask: " + err.Error())
 		return false, err
@@ -30,21 +30,8 @@ func IsUserAllowedToAccessTask(token string, taskID int) (bool, error) {
 	return i, nil
 }
 
-//GetSubtasksForTask checks if user is allowed to view task and if so returns all subtasks for a task
+//GetSubtasksForTask returns all subtasks for a task
 func GetSubtasksForTask(taskID int, token string) ([]datastructures.Subtask, error) {
-	task, err := getTask(taskID)
-	if err != nil {
-		log.Println("GetSubtasksForTasks: " + err.Error())
-		return nil, err
-	}
-	isUserAllowedToAccess, err := IsUserAllowedToAccessTask(token, task.GroupID)
-	if err != nil {
-		return nil, err
-	}
-	if !isUserAllowedToAccess {
-		err := errors.New("User not allowed to view Group details")
-		return nil, err
-	}
 
 	subtaskRows, err := db.Query("SELECT id,Points,Tasks_id,Name FROM `Subtasks` WHERE Tasks_id = ?", taskID)
 	if err != nil {
@@ -123,7 +110,7 @@ func AddSubtask(t datastructures.Subtask) (datastructures.Subtask, error) {
 }
 
 func IsUserAuthorOfTask(token string, taskID int) (bool, error) {
-	t, err := getTask(taskID)
+	t, err := GetTask(taskID)
 	if err != nil {
 		return false, err
 	}

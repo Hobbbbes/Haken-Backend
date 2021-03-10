@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/poodlenoodle42/Hacken-Backend/config"
 	"github.com/poodlenoodle42/Hacken-Backend/database"
+	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
 	"github.com/poodlenoodle42/Hacken-Backend/handels"
 	"github.com/rs/cors"
 )
@@ -18,6 +19,10 @@ import (
 func main() {
 	config := config.ReadConfig("config/config.yaml")
 	handels.DataDir = config.DataDir
+	handels.Languages = make(map[string]datastructures.Language)
+	for _, lang := range config.ContainerConfig.Languages {
+		handels.Languages[lang.Abbreviation] = lang
+	}
 	f, err := os.OpenFile("log.txt",
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

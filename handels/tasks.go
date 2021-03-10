@@ -63,13 +63,20 @@ func GetSubtasks(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	allowed, err := database.IsUserAllowedToAccessTask(token, taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !allowed {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("User not allowed to access task"))
+		return
+	}
 	subtasks, err := database.GetSubtasksForTask(taskID, token)
 	if err != nil {
-		if err.Error() == "User not allowed to view Group details" {
-			w.WriteHeader(http.StatusForbidden)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -160,6 +167,17 @@ func NewTask(w http.ResponseWriter, r *http.Request) {
 	taskInfo.GroupID = groupID
 	taskInfo.Author = token
 	task, err := database.AddTask(taskInfo)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	PreLaunchSubtask := datastructures.Subtask{
+		Points: 0,
+		Name:   "PreLaunch",
+		TaskID: task.ID,
+	}
+	PreLaunchSubtask, err = database.AddSubtask(PreLaunchSubtask)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

@@ -11,9 +11,16 @@ type LanguageName string
 
 //Submission of a User for a given Task
 type Submission struct {
-	ID     uint64       `json:"id"`
-	Author *User        `json:"author"`
-	T      *Task        `json:"task"`
-	Lang   LanguageName `json:"language"`
+	ID      int    `json:"id"`
+	Author  string `json:"-"`
+	TaskID  int    `json:"-"`
+	GroupID int    `json:"-"`
 	//Source Code path is calculated by ID
+}
+
+type Result struct {
+	Sub  *Submission `json:"submission"`
+	Subt *Subtask    `json:"subtask"`
+	//Success exit code of program for subtask, -1 indicates success
+	Success int `json:"success"`
 }

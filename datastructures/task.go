@@ -29,11 +29,3 @@ type Subtask struct {
 	TaskID int    `json:"-"`
 	//In and output file paths are calculated on the fly by ID
 }
-
-//Result connects a submission with a subtask
-type Result struct {
-	Submiss    *Submission
-	Subt       *Subtask
-	Points     int
-	ResultCode string
-}

@@ -18,6 +18,7 @@ const (
 	OK = 0
 	//MinorProblem e.g. when compilation fails
 	MinorProblem = 1
+	TimeOut      = 124
 	//CommandNotFound
 	CommandNotFound = 127
 	//SIGILL illegal instruction or corrupt binary
