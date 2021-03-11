@@ -2,7 +2,7 @@ config:
     limits.cpu: "1"
     limits.cpu.allowance: "50%"
     limits.cpu.priority: "0"
-    limits.kernel.fsize: 1024
+    limits.kernel.fsize: 1048576
     limits.kernel.nofile: 5000
     limits.memory: "128MB"
     limits.memory.enforce: "hard"

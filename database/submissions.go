@@ -25,7 +25,7 @@ func AddSubmission(sub datastructures.Submission) (datastructures.Submission, er
 
 func AddResult(res datastructures.Result) error {
 	_, err := db.Exec("INSERT INTO Result(Submission_id,Submission_User_Token,Submission_Tasks_id,Submission_Tasks_Group_id,Subtasks_id,Success) VALUES (?,?,?,?,?,?)",
-		res.Sub.ID, res.Sub.Author, res.Sub.TaskID, res.Sub.GroupID, res.Subt.ID, res.Success)
+		res.Sub.ID, res.Sub.Author, res.Sub.TaskID, res.Sub.GroupID, res.Subt.ID, res.Stat.ExitCode)
 	if err != nil {
 		log.Printf("AddResult:" + err.Error())
 

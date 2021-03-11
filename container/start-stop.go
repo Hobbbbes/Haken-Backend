@@ -26,11 +26,14 @@ func InitInstances(co config.ContainerConfig) {
 	connection = c
 	for i := 0; i < conf.NumContainer; i++ {
 		log.Printf("InitContainer: Start Instance %d\n", i)
-		err := startInstance(fmt.Sprintf("Haken%d", i))
+		name := fmt.Sprintf("Haken%d", i)
+		err := startInstance(name)
 		if err != nil {
 			log.Panic(err)
 		}
-		instanceChan <- fmt.Sprintf("Haken%d", i)
+		go func() {
+			instanceChan <- name
+		}()
 	}
 }
 
@@ -69,7 +72,7 @@ func startInstance(name string) error {
 		Timeout: 10,
 	}
 
-	op, err = connection.UpdateContainerState("h2", reqState, "")
+	op, err = connection.UpdateContainerState(name, reqState, "")
 	if err != nil {
 		return err
 	}
@@ -85,11 +88,12 @@ func startInstance(name string) error {
 func StopAndDeleteInstances() {
 	for i := 0; i < conf.NumContainer; i++ {
 		log.Printf("StopAndDeleteInstances: Stop Instance %d\n", i)
-		err := startInstance(fmt.Sprintf("Haken%d", i))
+		err := stopAndDeleteInstance(fmt.Sprintf("Haken%d", i))
 		if err != nil {
 			log.Panic(err)
 		}
 	}
+	close(instanceChan)
 }
 
 func stopAndDeleteInstance(name string) error {

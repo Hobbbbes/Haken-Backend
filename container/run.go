@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 
 	lxd "github.com/lxc/lxd/client"
 	"github.com/lxc/lxd/shared/api"
@@ -35,14 +36,9 @@ const (
 	SegFault = 139
 )
 
-type Status struct {
-	ExitCode int
-	Output   string
-}
-
 //PrepareExecution prepares the execution enviroment by copying source files and executing the PreLaunchTask
-func PrepareExecution(SourcePath string, lang datastructures.Language, instance string) (Status, error) {
-	var s Status
+func PrepareExecution(SourcePath string, lang datastructures.Language, instance string) (datastructures.Status, error) {
+	var s datastructures.Status
 	f, err := os.Open(SourcePath)
 	if err != nil {
 		return s, err
@@ -51,9 +47,9 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 		Content: f,
 		UID:     1500,
 		GID:     1500,
-		Mode:    644,
+		Mode:    0o777,
 	}
-	err = connection.CreateInstanceFile(instance, "/home/runner/main"+lang.Abbreviation, args)
+	err = connection.CreateInstanceFile(instance, "/home/runner/main."+lang.Abbreviation, args)
 	if err != nil {
 		return s, err
 	}
@@ -63,7 +59,7 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 		return s, nil
 	}
 	req := api.ContainerExecPost{
-		Command:     []string{fmt.Sprintf(lang.PreLaunchTask, "main"+lang.Abbreviation)},
+		Command:     strings.Split(fmt.Sprintf(lang.PreLaunchTask, "main."+lang.Abbreviation), " "),
 		WaitForWS:   true,
 		Interactive: false,
 		User:        1500,
@@ -78,7 +74,7 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 	}
 	reader := bufio.NewReader(read)
 	buf := make([]byte, 0, 1024*10)
-	op, err := connection.ExecContainer("h2", req, &args2)
+	op, err := connection.ExecContainer(instance, req, &args2)
 	if err != nil {
 		return s, err
 	}
@@ -87,7 +83,7 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 	if err != nil {
 		return s, err
 	}
-	s.ExitCode = op.Get().Metadata["return"].(int)
+	s.ExitCode = int(op.Get().Metadata["return"].(float64))
 	if s.ExitCode == 0 { //Compiled, no error message
 		return s, nil
 	}
@@ -105,13 +101,15 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 var timeout = 10
 
 //Exec executes given task, kills it after time and redirects input, returns output
-func Exec(instance string, command string, in io.ReadCloser) (Status, error) {
-	s := Status{
+func Exec(instance string, command string, in io.ReadCloser) (datastructures.Status, error) {
+	s := datastructures.Status{
 		ExitCode: -1,
 		Output:   "",
 	}
+	c := []string{"/usr/bin/timeout", strconv.Itoa(timeout)}
+	c = append(c, strings.Split(command, " ")...)
 	req := api.ContainerExecPost{
-		Command:     []string{"/usr/bin/timeout", strconv.Itoa(timeout), command},
+		Command:     c,
 		WaitForWS:   true,
 		Interactive: false,
 		User:        1500,
@@ -144,4 +142,29 @@ func Exec(instance string, command string, in io.ReadCloser) (Status, error) {
 		s.Output = string(buf[:n])
 	}
 	return s, nil
+}
+
+func ClearInstance(instance string) error {
+	req := api.ContainerExecPost{
+		Command:     []string{"find", "/home/runner/", "-delete"},
+		WaitForWS:   true,
+		Interactive: false,
+		User:        1500,
+		Group:       1500,
+		Cwd:         "/home/runner/",
+	}
+	args := lxd.ContainerExecArgs{
+		Stdin:  nil,
+		Stdout: nil,
+		Stderr: nil,
+	}
+	op, err := connection.ExecContainer(instance, req, &args)
+	if err != nil {
+		return err
+	}
+	err = op.Wait()
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/poodlenoodle42/Hacken-Backend/config"
+	"github.com/poodlenoodle42/Hacken-Backend/container"
 	"github.com/poodlenoodle42/Hacken-Backend/database"
 	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
 	"github.com/poodlenoodle42/Hacken-Backend/handels"
@@ -33,6 +34,8 @@ func main() {
 	database.InitDB(config.DBName, config.DBUser, config.DBPassword)
 	defer database.CloseDB()
 
+	container.InitInstances(config.ContainerConfig)
+	defer container.StopAndDeleteInstances()
 	r := mux.NewRouter().StrictSlash(true)
 	//Use for unautherized route
 	r.HandleFunc("/register", handels.AddUser).Methods("POST")
@@ -68,6 +71,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
 	//End
 
 	sc := make(chan os.Signal, 1)

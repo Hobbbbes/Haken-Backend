@@ -18,9 +18,14 @@ type Submission struct {
 	//Source Code path is calculated by ID
 }
 
+type Status struct {
+	ExitCode int    `json:"exitCode"`
+	Output   string `json:"output"`
+}
+
 type Result struct {
-	Sub  *Submission `json:"submission"`
+	Sub  *Submission `json:"-"`
 	Subt *Subtask    `json:"subtask"`
 	//Success exit code of program for subtask, -1 indicates success
-	Success int `json:"success"`
+	Stat Status `json:"status"`
 }
