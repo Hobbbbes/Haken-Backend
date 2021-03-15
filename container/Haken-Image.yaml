@@ -223,12 +223,14 @@ packages:
     - vim
     - gcc
     - g++
-    - golang
-    - nodejs
     - ghc
     - python3
     - npm
     - default-jre
+    - default-jdk
+    - nano
+    - wget
+    - software-properties-common
     action: install
 
   - packages:
@@ -371,6 +373,14 @@ actions:
     #!/bin/sh
     npm install -g typescript
     npm install -g ts-node
+    cd /home/runner
+    npm install -g prompt-sync-history
+    npm link prompt-sync
+    chown root:root node_modules
+    add-apt-repository -y ppa:longsleep/golang-backports
+    apt update
+    apt install -y golang-go
+
 - trigger: post-files
   action: |-
     #!/bin/sh
