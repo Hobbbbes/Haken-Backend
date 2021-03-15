@@ -67,14 +67,19 @@ func main() {
 	})
 	handler := c.Handler(r)
 	fmt.Println("Started serving")
-	err = http.ListenAndServeTLS(":8080", config.CertificateDir, config.PrivateKeyDir, handler)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	//End
-
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill, syscall.SIGKILL)
+	go func() {
+		err = http.ListenAndServeTLS(":8080", config.CertificateDir, config.PrivateKeyDir, handler)
+		if err != nil {
+			log.Panic(err)
+		}
+	}()
+
+	fmt.Println("Run after listen and serve")
+	//End
+	defer fmt.Println("Run after SIGKILL or SIGTERM with defer")
+
 	<-sc
+	fmt.Println("Run after SIGKILL or SIGTERM")
 }

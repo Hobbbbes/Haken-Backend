@@ -2,11 +2,11 @@ package container
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	lxd "github.com/lxc/lxd/client"
 	"github.com/lxc/lxd/shared/api"
@@ -59,12 +59,13 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 		return s, nil
 	}
 	req := api.ContainerExecPost{
-		Command:     strings.Split(fmt.Sprintf(lang.PreLaunchTask, "main."+lang.Abbreviation), " "),
+		Command:     strings.Split(lang.PreLaunchTask, " "),
 		WaitForWS:   true,
 		Interactive: false,
 		User:        1500,
 		Group:       1500,
 		Cwd:         "/home/runner/",
+		Environment: map[string]string{"GOPATH": "/home/runner/go", "HOME": "/home/runner"},
 	}
 	read, write := io.Pipe()
 	args2 := lxd.ContainerExecArgs{
@@ -87,6 +88,11 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 	if s.ExitCode == 0 { //Compiled, no error message
 		return s, nil
 	}
+	go func() {
+		time.Sleep(time.Millisecond * 1000)
+		read.Close()
+		write.Close()
+	}()
 	n, err := reader.Read(buf[:cap(buf)])
 	if err != nil {
 		if err == io.EOF {
@@ -99,6 +105,7 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 }
 
 var timeout = 10
+var killTimeout = 2
 
 //Exec executes given task, kills it after time and redirects input, returns output
 func Exec(instance string, command string, in io.ReadCloser) (datastructures.Status, error) {
@@ -106,7 +113,7 @@ func Exec(instance string, command string, in io.ReadCloser) (datastructures.Sta
 		ExitCode: -1,
 		Output:   "",
 	}
-	c := []string{"/usr/bin/timeout", strconv.Itoa(timeout)}
+	c := []string{"/usr/bin/timeout", "-k", strconv.Itoa(killTimeout), strconv.Itoa(timeout)}
 	c = append(c, strings.Split(command, " ")...)
 	req := api.ContainerExecPost{
 		Command:     c,
@@ -115,6 +122,7 @@ func Exec(instance string, command string, in io.ReadCloser) (datastructures.Sta
 		User:        1500,
 		Group:       1500,
 		Cwd:         "/home/runner/",
+		Environment: map[string]string{"GOPATH": "/home/runner/go"},
 	}
 	read, write := io.Pipe()
 	args := lxd.ContainerExecArgs{
@@ -122,7 +130,6 @@ func Exec(instance string, command string, in io.ReadCloser) (datastructures.Sta
 		Stdout: write,
 		Stderr: write,
 	}
-
 	scanner := bufio.NewReader(read)
 	buf := make([]byte, 0, 10*1024)
 	op, err := connection.ExecContainer(instance, req, &args)
@@ -134,7 +141,13 @@ func Exec(instance string, command string, in io.ReadCloser) (datastructures.Sta
 		return s, err
 	}
 	s.ExitCode = int(op.Get().Metadata["return"].(float64))
+
 	if s.ExitCode == 0 {
+		go func() {
+			time.Sleep(time.Millisecond * 1000)
+			read.Close()
+			write.Close()
+		}()
 		n, err := scanner.Read(buf[:cap(buf)])
 		if err != nil {
 			return s, err

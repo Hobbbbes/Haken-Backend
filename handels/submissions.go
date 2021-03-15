@@ -156,7 +156,7 @@ func SubmitCode(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("SubmissionHandler: " + err.Error())
 		}
-		Res.Stat.Output = ""
+		//Res.Stat.Output = ""
 		json.NewEncoder(w).Encode(Res)
 		flusher.Flush()
 	}
