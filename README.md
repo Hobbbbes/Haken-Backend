@@ -5,9 +5,9 @@
 - [x] C
 - [x] C++
 - [x] Go
-- [] C#
+- [ ] C#
 - [x] Java
 - [x] Python
 - [x] Javascript
-- [] Typescript
+- [ ] Typescript
 - [x] Haskell
