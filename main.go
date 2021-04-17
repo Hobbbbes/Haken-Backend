@@ -58,6 +58,7 @@ func main() {
 	s.HandleFunc("/tasks/{taskID}/newSubtask", handels.NewSubtask).Methods("POST")
 	//s.HandleFunc("/tasks/{taskID}", handels.SubmitCode).Methods("POST")
 	s.HandleFunc("/tasks/{taskID}/submit", handels.SubmitCode).Methods("POST")
+	//s.HandleFunc("/tasks/{taskID}/submissions").Methods("GET")
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,

@@ -161,3 +161,7 @@ func SubmitCode(w http.ResponseWriter, r *http.Request) {
 		flusher.Flush()
 	}
 }
+
+func GetResults(w http.ResponseWriter, r *http.Request) {
+
+}

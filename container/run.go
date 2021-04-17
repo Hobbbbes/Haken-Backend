@@ -86,6 +86,7 @@ func PrepareExecution(SourcePath string, lang datastructures.Language, instance 
 	}
 	s.ExitCode = int(op.Get().Metadata["return"].(float64))
 	if s.ExitCode == 0 { //Compiled, no error message
+		s.ExitCode = -1
 		return s, nil
 	}
 	go func() {
