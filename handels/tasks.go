@@ -87,12 +87,8 @@ func GetSubtasks(w http.ResponseWriter, r *http.Request) {
 func GetTaskPDF(w http.ResponseWriter, r *http.Request) {
 	//	token := r.Header.Get("token")
 	//	token = strings.TrimSpace(token)
-	token := r.URL.Query().Get("token")
-	if token == "" || !database.AuthToken(token) {
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
 	vars := mux.Vars(r)
 	taskIDstring := vars["taskID"]
 	taskID, err := strconv.Atoi(taskIDstring)

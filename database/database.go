@@ -25,7 +25,6 @@ func InitDB(dbname string, user string, pwd string) error {
 	if err != nil {
 		panic(err)
 	}
-	recentlyUsedTokens = make(map[string]bool)
 	groupTokens = make(map[string]int)
 	return nil
 }

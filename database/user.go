@@ -3,6 +3,9 @@ package database
 import (
 	"errors"
 	"log"
+
+	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func isUserInGroup(token string, groupID int) (bool, error) {
@@ -31,16 +34,13 @@ func doesUserExists(token string) (bool, error) {
 }
 
 //AddUser adds a usertoken if no other user with this token exists
-func AddUser(token string) error {
-	ex, err := doesUserExists(token)
+func AddUser(u datastructures.UserLogin) error {
+	pwdHash, err := bcrypt.GenerateFromPassword([]byte(u.Pwd), 10)
 	if err != nil {
 		log.Println("AddUser: " + err.Error())
 		return err
 	}
-	if ex {
-		return errors.New("User already exists")
-	}
-	_, err = db.Exec("INSERT INTO User(Token) VALUES (?)", token)
+	_, err = db.Exec("INSERT INTO User(Token,UserName,Password) VALUES (?,?,?)", RandomString(30), u.UserName, pwdHash)
 	if err != nil {
 		log.Println("AddUser: " + err.Error())
 		return err

@@ -1,39 +1,22 @@
 package database
 
 import (
-	"database/sql"
-	"log"
-	"sync"
-	"time"
+	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
+	"golang.org/x/crypto/bcrypt"
 )
 
-//Used when Password and Username are implemented
-var mutex = &sync.Mutex{}
-var recentlyUsedTokens map[string]bool
-
 //AuthToken checks if a given token is in database
-func AuthToken(token string) bool {
-	a, ex := recentlyUsedTokens[token]
-	if !ex {
-		auth := authTokenDatabase(token)
-		mutex.Lock()
-		recentlyUsedTokens[token] = auth
-		mutex.Unlock()
-		time.AfterFunc(time.Hour, func() {
-			mutex.Lock()
-			delete(recentlyUsedTokens, token)
-			mutex.Unlock()
-		})
-		return auth
+func AuthUser(u datastructures.UserLogin) (*datastructures.User, error) {
+	var user datastructures.User
+	err := db.QueryRow("SELECT Token,UserName,Password FROM `User` WHERE UserName = ?",
+		u.UserName).Scan(&user.Token, &user.UserName, &user.PwdHash)
+	if err != nil {
+		return nil, err
 	}
-	return a
-}
-func authTokenDatabase(token string) bool {
-	var exists bool
-	err := db.QueryRow("SELECT exists (SELECT * FROM User WHERE Token = ?)", token).Scan(&exists)
-	if err != nil && err != sql.ErrNoRows {
-		log.Println(err)
-		return false
+	err = bcrypt.CompareHashAndPassword(user.PwdHash, []byte(u.Pwd))
+	if err != nil {
+		return nil, nil
 	}
-	return exists
+
+	return &user, nil
 }

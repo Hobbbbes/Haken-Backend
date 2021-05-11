@@ -122,7 +122,6 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 
 func NewGroup(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("token")
-	token = strings.TrimSpace(token)
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

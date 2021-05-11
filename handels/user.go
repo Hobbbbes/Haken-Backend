@@ -17,14 +17,14 @@ func AddUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	var user datastructures.User
+	var user datastructures.UserLogin
 	err = json.Unmarshal(reqBody, &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	err = database.AddUser(user.Token)
+	err = database.AddUser(user)
 	if err != nil {
 		if err.Error() == "User already exists" {
 			w.WriteHeader(http.StatusConflict)

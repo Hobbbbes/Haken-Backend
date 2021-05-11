@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/poodlenoodle42/Hacken-Backend/config"
-	"github.com/poodlenoodle42/Hacken-Backend/container"
 	"github.com/poodlenoodle42/Hacken-Backend/database"
 	"github.com/poodlenoodle42/Hacken-Backend/datastructures"
 	"github.com/poodlenoodle42/Hacken-Backend/handels"
@@ -21,6 +20,7 @@ func main() {
 	config := config.ReadConfig("config/config.yaml")
 	handels.DataDir = config.DataDir
 	handels.Languages = make(map[string]datastructures.Language)
+	handels.CookieToToken = make(map[string]string)
 	for _, lang := range config.ContainerConfig.Languages {
 		handels.Languages[lang.Abbreviation] = lang
 	}
@@ -34,11 +34,12 @@ func main() {
 	database.InitDB(config.DBName, config.DBUser, config.DBPassword)
 	defer database.CloseDB()
 
-	container.InitInstances(config.ContainerConfig)
-	defer container.StopAndDeleteInstances()
+	//container.InitInstances(config.ContainerConfig)
+	//defer container.StopAndDeleteInstances()
 	r := mux.NewRouter().StrictSlash(true)
 	//Use for unautherized route
 	r.HandleFunc("/register", handels.AddUser).Methods("POST")
+	r.HandleFunc("/login", handels.Login).Methods("POST")
 	s := r.PathPrefix("/auth").Subrouter()
 	s.Use(handels.AuthToken)
 	s.HandleFunc("/groups", handels.GetGroups).Methods("GET")
@@ -79,7 +80,6 @@ func main() {
 
 	fmt.Println("Run after listen and serve")
 	//End
-	defer fmt.Println("Run after SIGKILL or SIGTERM with defer")
 
 	<-sc
 	fmt.Println("Run after SIGKILL or SIGTERM")

@@ -125,7 +125,7 @@ func GetGroupsForUser(token string) ([]datastructures.Group, error) {
 }
 
 //https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
-func randomString(length int) (str string) {
+func RandomString(length int) (str string) {
 	b := make([]byte, length)
 	rand.Read(b)
 	str = fmt.Sprintf("%x", b)[:length]
@@ -145,7 +145,7 @@ func GetGroupIDFromToken(gToken string) int {
 
 //GenerateGroupToken generates a random group token for users to join the group
 func GenerateGroupToken(groupID int) string {
-	randomStr := randomString(20)
+	randomStr := RandomString(20)
 	groupTokens[randomStr] = groupID
 	time.AfterFunc(time.Hour*2, func() {
 		delete(groupTokens, randomStr)
