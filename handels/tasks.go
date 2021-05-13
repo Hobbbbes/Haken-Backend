@@ -29,7 +29,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 
 	ex, err := database.DoesGroupExists(groupID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -38,7 +38,18 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Group does not exist"))
 		return
 	}
-	tasks, err := database.GetTasksForGroup(token, groupID)
+	allowed, err := database.IsUserInGroup(token, groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !allowed {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("User not allowed to access group"))
+		return
+	}
+	tasks, err := database.GetTasksForGroup(groupID)
 	if err != nil {
 		if err.Error() == "User not allowed to view Group details" {
 			w.WriteHeader(http.StatusForbidden)
@@ -74,7 +85,7 @@ func GetSubtasks(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User not allowed to access task"))
 		return
 	}
-	subtasks, err := database.GetSubtasksForTask(taskID, token)
+	subtasks, err := database.GetSubtasksForTask(taskID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

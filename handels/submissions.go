@@ -94,7 +94,7 @@ func SubmitCode(w http.ResponseWriter, r *http.Request) {
 	instance := container.GetInstance()
 	defer func() { go container.ReturnInstance(instance) }()
 
-	subtasks, err := database.GetSubtasksForTask(taskID, token)
+	subtasks, err := database.GetSubtasksForTask(taskID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

@@ -102,7 +102,7 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	tasks, err := database.GetTasksForGroup(token, group.ID)
+	tasks, err := database.GetTasksForGroup(group.ID)
 	if err != nil {
 		if err.Error() == "User not allowed to view Group details" {
 			w.WriteHeader(http.StatusForbidden)

@@ -2,7 +2,6 @@ package database
 
 import (
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -25,35 +24,8 @@ func DoesGroupExists(groupID int) (bool, error) {
 	return ex, err
 }
 
-//GetTasksForGroup returns all Tasks a Group contains and checks if requesting user has access
-func GetTasksForGroup(userToken string, groupID int) ([]datastructures.Task, error) {
-	var necessaryUserToken string
-	rows, err := db.Query("SELECT User_Token FROM Group_has_Users WHERE Group_id = ?", groupID)
-	if err != nil {
-		log.Println("GetTasksForGroup: " + err.Error())
-		return nil, err
-	}
-	defer rows.Close()
-	var userFound bool = false
-
-	for rows.Next() {
-		err := rows.Scan(&necessaryUserToken)
-		if err != nil {
-			log.Println("GetTasksForGroup: " + err.Error())
-			return nil, err
-		}
-		if necessaryUserToken == userToken {
-			userFound = true
-			break
-		}
-	}
-
-	if !userFound {
-		err = errors.New("User not allowed to view Group details")
-		log.Println("GetTasksForGroup: " + err.Error())
-		return nil, err
-	}
-
+//GetTasksForGroup returns all Tasks a Group contains
+func GetTasksForGroup(groupID int) ([]datastructures.Task, error) {
 	tasks := make([]datastructures.Task, 0, 20)
 	taskRows, err := db.Query("SELECT id,Name,Author,Description FROM Tasks WHERE Group_id = ?", groupID)
 	if err != nil {

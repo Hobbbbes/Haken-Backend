@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func isUserInGroup(token string, groupID int) (bool, error) {
+func IsUserInGroup(token string, groupID int) (bool, error) {
 	var isInGroup bool
 	err := db.QueryRow("SELECT exists (SELECT * FROM Group_has_Users WHERE User_Token = ? AND Group_id = ?)",
 		token, groupID).Scan(&isInGroup)
@@ -57,7 +57,7 @@ func AddUserToGroup(token string, groupID int) error {
 	if !groupExists {
 		return errors.New("Group does not exists")
 	}
-	userInGroup, err := isUserInGroup(token, groupID)
+	userInGroup, err := IsUserInGroup(token, groupID)
 	if err != nil {
 		log.Println("AddUser: " + err.Error())
 		return err

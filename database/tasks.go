@@ -22,7 +22,7 @@ func IsUserAllowedToAccessTask(token string, taskID int) (bool, error) {
 		log.Println("IsUserAllowedToAccessTask: " + err.Error())
 		return false, err
 	}
-	i, err := isUserInGroup(token, task.GroupID)
+	i, err := IsUserInGroup(token, task.GroupID)
 	if err != nil {
 		log.Println("IsUserAllowedToAccessTask: " + err.Error())
 		return false, err
@@ -31,7 +31,7 @@ func IsUserAllowedToAccessTask(token string, taskID int) (bool, error) {
 }
 
 //GetSubtasksForTask returns all subtasks for a task
-func GetSubtasksForTask(taskID int, token string) ([]datastructures.Subtask, error) {
+func GetSubtasksForTask(taskID int) ([]datastructures.Subtask, error) {
 
 	subtaskRows, err := db.Query("SELECT id,Points,Tasks_id,Name FROM `Subtasks` WHERE Tasks_id = ?", taskID)
 	if err != nil {
@@ -121,3 +121,53 @@ func IsUserAuthorOfTask(token string, taskID int) (bool, error) {
 	}
 	return t.Author == token, nil
 }
+
+func GetSubtask(id int) (datastructures.Subtask, error) {
+	var sTask datastructures.Subtask
+	err := db.QueryRow("SELECT id,Points,Name,Tasks_id FROM Subtasks WHERE id = ?", id).Scan(
+		&sTask.ID, &sTask.Points, &sTask.Name, &sTask.TaskID)
+	return sTask, err
+}
+
+func GetParentTaskOfSubtask(subtaskID int) (datastructures.Task, error) {
+	subT, err := GetSubtask(subtaskID)
+	if err != nil {
+		log.Printf("GetParentTaskOfSubtask:" + err.Error())
+		return datastructures.Task{}, err
+	}
+	var task datastructures.Task
+	err = db.QueryRow("SELECT id,Name,Author,Description,Group_id FROM Tasks WHERE id = ?", subT.TaskID).Scan(
+		&task.ID, &task.Name, &task.Author, &task.Description, &task.GroupID)
+	if err != nil {
+		log.Printf("GetParentTaskOfSubtask:" + err.Error())
+		return datastructures.Task{}, err
+	}
+	return task, nil
+}
+
+func DeleteSubtask(id int) error {
+	_, err := db.Exec("DELETE Subtasks.* FROM Subtasks WHERE id = ?", id)
+	return err
+}
+
+/*
+func DeleteAllSubtasksOfTask(task_id int) error {
+	_, err := db.Exec("DELETE Subtasks.* FROM Subtasks WHERE Tasks_id = ?", task_id)
+	return err
+}
+*/
+func DeleteTask(id int) error {
+	_, err := db.Exec("DELETE Tasks.* FROM Tasks WHERE id = ?", id)
+	return err
+}
+
+/*
+func DeleteAllTasksOfGroup(groupID int) error {
+	tasks, err := GetTasksForGroup(groupID)
+	if err != nil {
+		log.Printf("DeleteAllTasksOfGroup:" + err.Error())
+		return err
+	}
+	IsUserInGroup()
+}
+*/
