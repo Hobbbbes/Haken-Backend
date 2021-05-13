@@ -87,6 +87,11 @@ func GetTasksForGroups(groupIDs []interface{}) ([]datastructures.Task, error) {
 			log.Println("GetTasksForGroups: ", err.Error())
 			return nil, err
 		}
+		t.Author, err = GetUserNameFromToken(t.Author)
+		if err != nil {
+			log.Println("GetUserNameFromToken: ", err.Error())
+			return nil, err
+		}
 		tasks = append(tasks, t)
 	}
 	return tasks, nil

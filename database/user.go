@@ -74,3 +74,16 @@ func AddUserToGroup(token string, groupID int) error {
 	}
 	return nil
 }
+
+var tokensToUsername map[string]string
+
+func GetUserNameFromToken(token string) (string, error) {
+	name, ex := tokensToUsername[token]
+	var err error = nil
+	if !ex {
+		err = db.QueryRow("SELECT UserName FROM User WHERE Token = ?",
+			token).Scan(&name)
+		tokensToUsername[token] = name
+	}
+	return name, err
+}

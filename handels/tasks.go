@@ -209,16 +209,13 @@ func GetAllTasksForUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/json")
 	groupsWithTasks := make([]datastructures.GroupWithTasks, len(groups))
 	for i, group := range groups {
+		groupsWithTasks[i] = datastructures.GroupWithTasks{
+			group,
+			make([]datastructures.Task, 0, 10),
+		}
 		for _, task := range tasks {
 			if task.GroupID == group.ID {
-				groupsWithTasks[i] = datastructures.GroupWithTasks{
-					group,
-					append(groupsWithTasks[i].Tasks, task),
-				}
-			}
-			groupsWithTasks[i] = datastructures.GroupWithTasks{
-				group,
-				groupsWithTasks[i].Tasks,
+				groupsWithTasks[i].Tasks = append(groupsWithTasks[i].Tasks, task)
 			}
 			if len(groupsWithTasks[i].Tasks) == 0 {
 				groupsWithTasks[i].Tasks = make([]datastructures.Task, 0)

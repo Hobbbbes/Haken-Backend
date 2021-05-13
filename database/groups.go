@@ -78,7 +78,7 @@ func GetGroupsForUser(token string) ([]datastructures.Group, error) {
 
 	groupIDs := make([]interface{}, 0, 20)
 	groupsIsAdmin := make(map[int]bool)
-	groupIDsRows, err := db.Query("SELECT Group_id,IsAdmin FROM Group_has_Users WHERE User_Token = ?", token)
+	groupIDsRows, err := db.Query("SELECT Group_id,IsAdmin FROM Group_has_Users WHERE User_Token=?", token)
 
 	if err != nil {
 		log.Println("GetGroupsForUser: " + err.Error())

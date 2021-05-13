@@ -26,6 +26,7 @@ func InitDB(dbname string, user string, pwd string) error {
 		panic(err)
 	}
 	groupTokens = make(map[string]int)
+	tokensToUsername = make(map[string]string)
 	return nil
 }
 
