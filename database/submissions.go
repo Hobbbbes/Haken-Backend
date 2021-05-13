@@ -8,8 +8,8 @@ import (
 
 //AddSubmission adds submission to the database and returns submission with id
 func AddSubmission(sub datastructures.Submission) (datastructures.Submission, error) {
-	res, err := db.Exec("INSERT INTO Submission(User_Token,Tasks_id,Tasks_Group_id) VALUES (?,?,?)",
-		sub.Author, sub.TaskID, sub.GroupID)
+	res, err := db.Exec("INSERT INTO Submission(LanguageAbbreviation,User_Token,Tasks_id,Tasks_Group_id) VALUES (?,?,?,?)",
+		sub.LanguageAbbreviation, sub.Author, sub.TaskID, sub.GroupID)
 	if err != nil {
 		log.Printf("AddSubmission:" + err.Error())
 		return sub, err
@@ -34,7 +34,7 @@ func AddResult(res datastructures.Result) error {
 }
 
 func GetSubmissionsForTask(taskID int) ([]datastructures.Submission, error) {
-	submissionRow, err := db.Query("SELECT id,User_Token,Tasks_id,Tasks_Group_id FROM `Submission` WHERE Tasks_id = ?", taskID)
+	submissionRow, err := db.Query("SELECT id,LanguageAbbreviation,User_Token,Tasks_id,Tasks_Group_id FROM `Submission` WHERE Tasks_id = ?", taskID)
 	if err != nil {
 		log.Println("GetSubmissionsForTask: " + err.Error())
 		return nil, err
@@ -43,7 +43,7 @@ func GetSubmissionsForTask(taskID int) ([]datastructures.Submission, error) {
 	submissions := make([]datastructures.Submission, 0, 10)
 	for submissionRow.Next() {
 		var submission datastructures.Submission
-		err := submissionRow.Scan(&submission.ID, &submission.Author, &submission.TaskID, &submission.GroupID)
+		err := submissionRow.Scan(&submission.ID, &submission.LanguageAbbreviation, &submission.Author, &submission.TaskID, &submission.GroupID)
 		if err != nil {
 			log.Println("GetSubmissionsForTask: " + err.Error())
 			return nil, err
@@ -63,7 +63,7 @@ func GetSubmission(id int) (datastructures.Submission, error) {
 func GetResultsForSubmission(subID int) ([]datastructures.Status, error) {
 	submissionRow, err := db.Query("SELECT id,User_Token,Tasks_id,Tasks_Group_id FROM `Submission` WHERE Tasks_id = ?", subID)
 	if err != nil {
-		log.Println("GetSubmissionsForTask: " + err.Error())
+		log.Println("GetResultsForSubmission: " + err.Error())
 		return nil, err
 	}
 	defer submissionRow.Close()
@@ -72,7 +72,7 @@ func GetResultsForSubmission(subID int) ([]datastructures.Status, error) {
 		var submission datastructures.Submission
 		err := submissionRow.Scan(&submission.ID, &submission.Author, &submission.TaskID, &submission.GroupID)
 		if err != nil {
-			log.Println("GetSubmissionsForTask: " + err.Error())
+			log.Println("GetResultsForSubmission: " + err.Error())
 			return nil, err
 		}
 		submissions = append(submissions, submission)

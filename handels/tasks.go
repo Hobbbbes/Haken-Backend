@@ -329,3 +329,52 @@ func NewSubtask(w http.ResponseWriter, r *http.Request) {
 	io.Copy(inf, infile)
 	w.WriteHeader(http.StatusOK)
 }
+
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("token")
+	vars := mux.Vars(r)
+	taskIDstring := vars["taskID"]
+	taskID, err := strconv.Atoi(taskIDstring)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	allowed, err := database.IsUserAuthorOfTask(token, taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !allowed {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("You are not the author of the task"))
+		return
+	}
+	subTs, err := database.GetSubtasksForTask(taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	for _, subT := range subTs {
+		os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_in", subT.ID))
+		os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_out", subT.ID))
+	}
+	subs, err := database.GetSubmissionsForTask(taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	for _, sub := range subs {
+		os.Remove(DataDir + fmt.Sprintf("/submissions/%d.%s", sub.ID, sub.LanguageAbbreviation))
+	}
+	os.Remove(DataDir + fmt.Sprintf("/tasks/%d.pdf", taskID))
+	err = database.DeleteTask(taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+}

@@ -147,3 +147,8 @@ func AddNewGroup(token string, group datastructures.Group) (datastructures.Group
 	}
 	return group, nil
 }
+
+func DeleteGroup(id int) error {
+	_, err := db.Exec("DELETE Group.* FROM Group WHERE id = ?", id)
+	return err
+}

@@ -62,17 +62,6 @@ func SubmitCode(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	sub := datastructures.Submission{
-		Author:  token,
-		TaskID:  taskID,
-		GroupID: task.GroupID,
-	}
-	sub, err = database.AddSubmission(sub)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
 	langAb := r.FormValue("language")
 	lang, ex := Languages[langAb]
 	if !ex {
@@ -80,6 +69,20 @@ func SubmitCode(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Language not known"))
 		return
 	}
+	sub := datastructures.Submission{
+		LanguageAbbreviation: langAb,
+		Author:               token,
+		TaskID:               taskID,
+		GroupID:              task.GroupID,
+	}
+
+	sub, err = database.AddSubmission(sub)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	//inf, err := os.OpenFile(DataDir+fmt.Sprintf("/subtasks/%d_in", sub.ID), os.O_WRONLY|os.O_CREATE, 0666)
 	path := DataDir + fmt.Sprintf("/submissions/%d.%s", sub.ID, lang.Abbreviation)
 	f, err := os.Create(path)

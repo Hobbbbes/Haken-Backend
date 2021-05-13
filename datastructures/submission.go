@@ -11,10 +11,11 @@ type LanguageName string
 
 //Submission of a User for a given Task
 type Submission struct {
-	ID      int    `json:"id"`
-	Author  string `json:"-"`
-	TaskID  int    `json:"-"`
-	GroupID int    `json:"-"`
+	ID                   int    `json:"id"`
+	Author               string `json:"-"`
+	TaskID               int    `json:"-"`
+	GroupID              int    `json:"-"`
+	LanguageAbbreviation string `json:"-"`
 	//Source Code path is calculated by ID
 }
 
