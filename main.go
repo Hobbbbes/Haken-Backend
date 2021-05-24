@@ -47,6 +47,7 @@ func main() {
 	//s.HandleFunc("/groups/{groupID}/tasks", handels.GetTasks).Methods("GET")
 	s.HandleFunc("/groups/{groupID}/newTask", handels.NewTask).Methods("POST")
 	s.HandleFunc("/groups/new", handels.NewGroup).Methods("POST")
+	s.HandleFunc("/groups/{groupID}/delete", handels.DeleteGroup).Methods("DELETE")
 
 	//Token as json
 	s.HandleFunc("/groups/join", handels.JoinGroup).Methods("POST")

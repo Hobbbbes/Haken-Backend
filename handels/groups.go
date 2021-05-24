@@ -144,3 +144,47 @@ func NewGroup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/json")
 	json.NewEncoder(w).Encode(group)
 }
+
+func DeleteGroup(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("token")
+	token = strings.TrimSpace(token)
+	vars := mux.Vars(r)
+	groupIDstring := vars["groupID"]
+	groupID, err := strconv.Atoi(groupIDstring)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	allowed, err := database.IsUserAdminOfGroup(token, groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !allowed {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("You are not the admin of the group"))
+		return
+	}
+	tasks, err := database.GetTasksForGroup(groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	for _, task := range tasks {
+		err = deleteTask(task.ID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+	}
+	err = database.DeleteGroup(groupID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+}

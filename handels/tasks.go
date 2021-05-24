@@ -357,32 +357,37 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("You are not the author of the task"))
 		return
 	}
-	subTs, err := database.GetSubtasksForTask(taskID)
+	err = deleteTask(taskID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
+	}
+
+}
+
+func deleteTask(id int) error {
+	subTs, err := database.GetSubtasksForTask(id)
+	if err != nil {
+		return err
 	}
 	for _, subT := range subTs {
 		os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_in", subT.ID))
 		os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_out", subT.ID))
 	}
-	subs, err := database.GetSubmissionsForTask(taskID)
+	subs, err := database.GetSubmissionsForTask(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
+		return err
 	}
 	for _, sub := range subs {
 		os.Remove(DataDir + fmt.Sprintf("/submissions/%d.%s", sub.ID, sub.LanguageAbbreviation))
 	}
-	os.Remove(DataDir + fmt.Sprintf("/tasks/%d.pdf", taskID))
-	err = database.DeleteTask(taskID)
+	os.Remove(DataDir + fmt.Sprintf("/tasks/%d.pdf", id))
+	err = database.DeleteTask(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
+		return err
 	}
+	return nil
 }
 
 func DeleteSubtask(w http.ResponseWriter, r *http.Request) {
@@ -409,15 +414,23 @@ func DeleteSubtask(w http.ResponseWriter, r *http.Request) {
 	}
 	if !allowed {
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("You are not the author of the task"))
+		w.Write([]byte("You are not author of task"))
 		return
 	}
-	err = database.DeleteSubtask(subtask.ID)
+	err = deleteSubtask(subtaskID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_in", subtask.ID))
-	os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_out", subtask.ID))
+}
+
+func deleteSubtask(id int) error {
+	err := database.DeleteSubtask(id)
+	if err != nil {
+		return err
+	}
+	os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_in", id))
+	os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_out", id))
+	return nil
 }
