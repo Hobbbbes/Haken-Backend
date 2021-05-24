@@ -146,7 +146,7 @@ func GetParentTaskOfSubtask(subtaskID int) (datastructures.Task, error) {
 }
 
 func DeleteSubtask(id int) error {
-	_, err := db.Exec("DELETE Subtasks.* FROM Subtasks WHERE id = ?", id)
+	_, err := db.Exec("DELETE FROM Subtasks WHERE id = ?", id)
 	return err
 }
 
@@ -157,7 +157,7 @@ func DeleteAllSubtasksOfTask(task_id int) error {
 }
 */
 func DeleteTask(id int) error {
-	_, err := db.Exec("DELETE Tasks.* FROM Tasks WHERE id = ?", id)
+	_, err := db.Exec("DELETE FROM Tasks WHERE id = ?", id)
 	return err
 }
 

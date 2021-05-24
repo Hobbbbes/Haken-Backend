@@ -198,6 +198,12 @@ func NewTask(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 	io.Copy(f, file)
+	task.Author, err = database.GetUserNameFromToken(task.Author)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 	w.Header().Set("Content-Type", "text/json")
 	json.NewEncoder(w).Encode(task)
 }
@@ -377,4 +383,41 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+}
+
+func DeleteSubtask(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("token")
+	vars := mux.Vars(r)
+	subtaskIDstring := vars["subtaskID"]
+	subtaskID, err := strconv.Atoi(subtaskIDstring)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	subtask, err := database.GetSubtask(subtaskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	allowed, err := database.IsUserAuthorOfTask(token, subtask.TaskID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	if !allowed {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("You are not the author of the task"))
+		return
+	}
+	err = database.DeleteSubtask(subtask.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_in", subtask.ID))
+	os.Remove(DataDir + fmt.Sprintf("/subtasks/%d_out", subtask.ID))
 }
